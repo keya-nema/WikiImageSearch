@@ -19,11 +19,13 @@
     <GridView
         android:id="@+id/gridview"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="fill_parent"
         android:verticalSpacing="2dp"
         android:horizontalSpacing="2dp"
         android:stretchMode="columnWidth"
-        android:numColumns="5"
+        android:numColumns="3"
         android:gravity="center"
-        android:layout_below="@id/home_search"/>
+        android:layout_below="@id/my_toolbar"
+        android:scrollbars="none"
+        android:layout_marginTop="10dp" />
 </RelativeLayout>

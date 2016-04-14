@@ -24,7 +24,7 @@ public class ContentFetcher extends AsyncTask<String, Void, String> {
     private HttpURLConnection connection;
     private BufferedReader in;
     public static final int HTTP_TIMEOUT = 15 * 1000; // milliseconds
-    public static String URL = "https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=thumbnail&pithumbsize=50&pilimit=50&generator=prefixsearch&gpssearch=";
+    public static String URL = "https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=thumbnail&pithumbsize=200&pilimit=50&generator=prefixsearch&gpssearch=";
 
     public ContentFetcher(MainActivity context, ResultCallback callback) {
         this.context = context;
