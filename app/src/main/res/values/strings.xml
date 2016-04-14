@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Wikipedia Images</string>
+    <string name="enter_search_text">Enter Search Text</string>
+</resources>
