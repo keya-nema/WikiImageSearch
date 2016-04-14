@@ -1,5 +1,7 @@
 package in.keya.wikipediaimagesearch.activities;
 
+import android.app.Fragment;
+import android.app.FragmentManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -7,6 +9,8 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
@@ -26,6 +30,7 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
     private ContentFetcher task;
     private EditText homeSearchView;
     private WikiImageAdapter adapter;
+    private Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,7 +39,8 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
         homeSearchView = (EditText) findViewById(R.id.home_search);
         attachTextWatcher();
         attachClearText();
-        setSupportActionBar((Toolbar) findViewById(R.id.my_toolbar));
+        toolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        setSupportActionBar(toolbar);
     }
 
     private void attachClearText() {
@@ -79,9 +85,27 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
     }
 
     @Override
-    public void onResult(ArrayList<WikiImage> wikiImages) {
+    public void onResult(final ArrayList<WikiImage> wikiImages) {
         adapter = new WikiImageAdapter(this, wikiImages);
-        ((GridView) findViewById(R.id.gridview)).setAdapter(adapter);
+        GridView gridView = (GridView) findViewById(R.id.gridview);
+        gridView.setAdapter(adapter);
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                FragmentManager fragmentManager = getFragmentManager();
+                if (fragmentManager.findFragmentById(R.id.container_frame_layout) == null) {
+                    WikiImage wikiImage = wikiImages.get(position);
+                    ImageDetailsFragment fragment = new ImageDetailsFragment();
+                    fragment.setWikiImage(wikiImage);
+                    fragmentManager.beginTransaction().add(R.id.container_frame_layout, fragment).commit();
+                    if (toolbar != null) {
+                        toolbar.setVisibility(View.GONE);
+                    }
+                    getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+                }
+            }
+        });
     }
 
     @Override
@@ -90,6 +114,21 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
             Log.d(getPackageName(), "Result fetched: " + result);
             ContentParser parser = new ContentParser((String) result, this);
             parser.parseResult();
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        FragmentManager fragmentManager = getFragmentManager();
+        Fragment fragment = fragmentManager.findFragmentById(R.id.container_frame_layout);
+        if (fragment == null) {
+            super.onBackPressed();
+        } else {
+            fragmentManager.beginTransaction().remove(fragment).commit();
+            if (toolbar != null) {
+                toolbar.setVisibility(View.VISIBLE);
+            }
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         }
     }
 }
