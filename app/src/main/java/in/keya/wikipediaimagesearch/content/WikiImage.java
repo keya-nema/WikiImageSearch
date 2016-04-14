@@ -1,5 +1,7 @@
 package in.keya.wikipediaimagesearch.content;
 
+import android.graphics.Bitmap;
+
 /**
  * Created by keya on 14/04/16.
  */
@@ -9,6 +11,7 @@ public class WikiImage {
     int width, height;
     String key;
     private String title;
+    private Bitmap bitmap;
 
     public void setThumbnailURL(String url) { this.thumbnailURL = url; }
 
@@ -29,4 +32,10 @@ public class WikiImage {
     public void setTitle(String title) { this.title = title; }
 
     public String getTitle() { return title; }
+
+    public void setBitmap(Bitmap bitmap) {
+        this.bitmap = bitmap;
+    }
+
+    public Bitmap getBitmap() { return bitmap; }
 }

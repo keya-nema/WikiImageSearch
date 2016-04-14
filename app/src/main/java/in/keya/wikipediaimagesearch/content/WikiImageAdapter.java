@@ -79,18 +79,19 @@ public class WikiImageAdapter extends BaseAdapter {
 
         WikiImage image = (WikiImage) getItem(i);
 
-        ImageFetcher imageFetcher = new ImageFetcher(imageResultCallback(picture), context);
+        ImageFetcher imageFetcher = new ImageFetcher(imageResultCallback(picture, image), context);
         imageFetcher.execute(image.getThumbnailURL());
 //        name.setText(image.getTitle());
 
         return view;
     }
 
-    private ResultCallback<Bitmap> imageResultCallback(final ImageView imageView) {
+    private ResultCallback<Bitmap> imageResultCallback(final ImageView imageView, final WikiImage image) {
         return new ResultCallback<Bitmap>() {
             @Override
             public void onResult(Bitmap result) {
                 imageView.setImageBitmap(result);
+                image.setBitmap(result);
                 imageView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
                     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
                     @Override
