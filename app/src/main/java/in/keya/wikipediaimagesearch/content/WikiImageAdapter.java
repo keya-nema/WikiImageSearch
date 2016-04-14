@@ -1,7 +1,10 @@
 package in.keya.wikipediaimagesearch.content;
 
+import android.animation.Animator;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -82,8 +85,40 @@ public class WikiImageAdapter extends BaseAdapter {
             @Override
             public void onResult(Bitmap result) {
                 imageView.setImageBitmap(result);
+                imageView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+                    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+                    @Override
+                    public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                        if (imageView.getVisibility() == View.INVISIBLE) {
+                            v.removeOnLayoutChangeListener(this);
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                                toggleInformationView(imageView);
+                            } else {
+                                imageView.setVisibility(View.VISIBLE);
+                            }
+
+                        }
+                    }
+                });
             }
         };
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void toggleInformationView(ImageView imageView) {
+        // get the center for the clipping circle
+        int cx = imageView.getWidth() / 2;
+        int cy = imageView.getHeight() / 2;
+
+        // get the final radius for the clipping circle
+        float finalRadius = (float) Math.hypot(cx, cy);
+
+        // create the animator for this view (the start radius is zero)
+        Animator anim = ViewAnimationUtils.createCircularReveal(imageView, cx, cy, 0, finalRadius);
+
+        // make the view visible and start the animation
+        imageView.setVisibility(View.VISIBLE);
+        anim.start();
     }
 }
 
