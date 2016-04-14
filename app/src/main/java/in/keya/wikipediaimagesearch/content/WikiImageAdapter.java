@@ -7,10 +7,10 @@ import android.graphics.Bitmap;
 import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,17 +36,23 @@ public class WikiImageAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return wikiImages.size();
+        if (wikiImages != null) return wikiImages.size();
+        else return 0;
     }
 
     @Override
     public Object getItem(int i) {
-        return wikiImages.get(i);
+        if (wikiImages != null) return wikiImages.get(i);
+        else return null;
     }
 
     @Override
     public long getItemId(int i) {
         return 0;
+    }
+
+    public void setImages(ArrayList<WikiImage> images) {
+        this.wikiImages = images;
     }
 
     public class ViewHolder{
