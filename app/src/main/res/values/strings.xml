@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">Wikipedia Images</string>
     <string name="enter_search_text">Enter Search Text</string>
-    <string name="error">Sorry! There is some error fetching content.</string>
+    <string name="error_message">Sorry! There is some error fetching content.</string>
     <string name="ok">OK</string>
+    <string name="network_error">Some problem occurred while connecting to network.  Please check your network settings and retry.</string>
+    <string name="error">Error</string>
 </resources>

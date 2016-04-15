@@ -5,5 +5,5 @@ package in.keya.wikipediaimagesearch.server;
  */
 public interface ResultCallback<T> {
 
-    public void onResult(T result);
+    public void onResult(T result, int code);
 }

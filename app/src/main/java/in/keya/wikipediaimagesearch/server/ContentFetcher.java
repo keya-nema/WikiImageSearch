@@ -18,13 +18,11 @@ import in.keya.wikipediaimagesearch.activities.MainActivity;
  * Created by keya on 13/04/16.
  */
 public class ContentFetcher extends AsyncTask<String, Void, String> {
-    private static final String METHOD_TYPE_GET = "GET";
     private final ResultCallback callback;
     private final MainActivity context;
     private HttpURLConnection connection;
     private BufferedReader in;
-    public static final int HTTP_TIMEOUT = 15 * 1000; // milliseconds
-    public static String URL = "https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=thumbnail&pithumbsize=200&pilimit=50&generator=prefixsearch&gpssearch=";
+    private int code;
 
     public ContentFetcher(MainActivity context, ResultCallback callback) {
         this.context = context;
@@ -37,10 +35,10 @@ public class ContentFetcher extends AsyncTask<String, Void, String> {
         try {
             url = new URL(params[0]);
             connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod(METHOD_TYPE_GET);
+            connection.setRequestMethod(Constants.METHOD_TYPE_GET);
 
             if (connection != null) {
-                connection.setReadTimeout(HTTP_TIMEOUT);
+                connection.setReadTimeout(Constants.HTTP_TIMEOUT);
                 connection.connect();
 
                 // read the output from the server
@@ -56,6 +54,12 @@ public class ContentFetcher extends AsyncTask<String, Void, String> {
                 } catch (IOException readerException) {
                     readerException.printStackTrace();
                 }
+
+                if (connection != null) {
+                    code = connection.getResponseCode();
+                } else {
+                    code = Constants.NETWORK_ERROR_CODE;
+                }
                 return result.toString();
             }
         } catch (MalformedURLException e) {
@@ -67,14 +71,23 @@ public class ContentFetcher extends AsyncTask<String, Void, String> {
             iioe.printStackTrace();
         } catch (IOException e) {
             //e.printStackTrace();
+            code = Constants.NETWORK_ERROR_CODE;
             Log.d(context.getPackageName(), "Error fetching content: " + e.getMessage());
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         return null;
     }
 
     @Override
     protected void onPostExecute(String result) {
-        callback.onResult(result);
+        callback.onResult(result, code);
         Log.d(context.getPackageName(), "Task cancelled");
         super.onPostExecute(result);
     }

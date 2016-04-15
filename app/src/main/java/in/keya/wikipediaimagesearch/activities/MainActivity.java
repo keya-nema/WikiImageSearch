@@ -27,6 +27,7 @@ import in.keya.wikipediaimagesearch.content.ContentParser;
 import in.keya.wikipediaimagesearch.content.IResultReceiver;
 import in.keya.wikipediaimagesearch.content.WikiImage;
 import in.keya.wikipediaimagesearch.content.WikiImageAdapter;
+import in.keya.wikipediaimagesearch.server.Constants;
 import in.keya.wikipediaimagesearch.server.ContentFetcher;
 import in.keya.wikipediaimagesearch.server.ResultCallback;
 
@@ -148,26 +149,35 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
     }
 
     @Override
-    public void onResult(Object result) {
+    public void onResult(Object result, int code) {
         if (result instanceof String) {
             Log.d(getPackageName(), "Result fetched: " + result);
             ContentParser parser = new ContentParser((String) result, this);
             parser.parseResult();
         } else if (result == null){
             // Show an error dialog
-            showErrorDialog(getString(R.string.error));
+            String message = "";
+            if (code == Constants.NETWORK_ERROR_CODE) {
+                message = getString(R.string.network_error);
+            } else {
+                message = getString(R.string.error_message);
+            }
+            showErrorDialog(message, code);
             clearAdapter();
             progressBar.setVisibility(View.GONE);
         }
     }
 
-    private void showErrorDialog(String message) {
+    private void showErrorDialog(String message, final int code) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(message)
+        builder.setMessage(message).setTitle(getString(R.string.error))
                 .setCancelable(false)
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.dismiss();
+                        if (code == Constants.NETWORK_ERROR_CODE) {
+                            finish();
+                        }
                     }
                 });
         AlertDialog alert = builder.create();

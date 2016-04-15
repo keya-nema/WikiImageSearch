@@ -18,6 +18,7 @@ import in.keya.wikipediaimagesearch.R;
 public class ImageFetcher extends AsyncTask<String, Void, Bitmap> {
   private ResultCallback<Bitmap> bitmapCallback;
   private Context context;
+  private int code;
 
   public ImageFetcher(ResultCallback<Bitmap> bitmapResultCallback, Context context) {
     this.bitmapCallback = bitmapResultCallback;
@@ -40,20 +41,27 @@ public class ImageFetcher extends AsyncTask<String, Void, Bitmap> {
     try {
       URL url = new URL(imageUrl);
       HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-      connection.setRequestMethod("GET");
+      connection.setRequestMethod(Constants.METHOD_TYPE_GET);
 
       if (connection != null) {
-        connection.setReadTimeout(ContentFetcher.HTTP_TIMEOUT);
+        connection.setReadTimeout(Constants.HTTP_TIMEOUT);
         connection.connect();
 
         // read the output from the server
         imageBitmap = BitmapFactory.decodeStream(connection.getInputStream());
+
+        if (connection != null) {
+          code = connection.getResponseCode();
+        } else {
+          code = Constants.NETWORK_ERROR_CODE;
+        }
         return imageBitmap;
       }
 
     } catch (Exception e) {
       //e.printStackTrace();
       Log.d(context.getPackageName(), "Error downloading image: " + e.getMessage());
+      code = Constants.NETWORK_ERROR_CODE;
     }
     return imageBitmap;
   }
@@ -61,6 +69,6 @@ public class ImageFetcher extends AsyncTask<String, Void, Bitmap> {
   @Override
   protected void onPostExecute(Bitmap bitmap) {
     super.onPostExecute(bitmap);
-    bitmapCallback.onResult(bitmap);
+    bitmapCallback.onResult(bitmap, code);
   }
 }

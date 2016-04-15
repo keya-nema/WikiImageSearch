@@ -13,11 +13,13 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import in.keya.wikipediaimagesearch.R;
+import in.keya.wikipediaimagesearch.server.Constants;
 import in.keya.wikipediaimagesearch.server.ImageFetcher;
 import in.keya.wikipediaimagesearch.server.ResultCallback;
 
@@ -107,11 +109,14 @@ public class WikiImageAdapter extends BaseAdapter {
     private ResultCallback<Bitmap> imageResultCallback(final ViewHolder holder, final WikiImage image) {
         return new ResultCallback<Bitmap>() {
             @Override
-            public void onResult(Bitmap result) {
+            public void onResult(Bitmap result, int code) {
                 final ImageView imageView = holder.imageHolder;
                 holder.progressBar.setVisibility(View.GONE);
                 imageView.setImageBitmap(result);
                 image.setBitmap(result);
+                if (code == Constants.NETWORK_ERROR_CODE) {
+                    Toast.makeText(context, context.getString(R.string.error_message), Toast.LENGTH_SHORT).show();
+                }
                 imageView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
                     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
                     @Override
