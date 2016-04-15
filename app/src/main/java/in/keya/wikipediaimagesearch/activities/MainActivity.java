@@ -1,7 +1,9 @@
 package in.keya.wikipediaimagesearch.activities;
 
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -151,7 +153,25 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
             Log.d(getPackageName(), "Result fetched: " + result);
             ContentParser parser = new ContentParser((String) result, this);
             parser.parseResult();
+        } else if (result == null){
+            // Show an error dialog
+            showErrorDialog(getString(R.string.error));
+            clearAdapter();
+            progressBar.setVisibility(View.GONE);
         }
+    }
+
+    private void showErrorDialog(String message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(message)
+                .setCancelable(false)
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.dismiss();
+                    }
+                });
+        AlertDialog alert = builder.create();
+        alert.show();
     }
 
     @Override

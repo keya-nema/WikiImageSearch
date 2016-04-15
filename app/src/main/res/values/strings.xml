@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">Wikipedia Images</string>
     <string name="enter_search_text">Enter Search Text</string>
+    <string name="error">Sorry! There is some error fetching content.</string>
+    <string name="ok">OK</string>
 </resources>
