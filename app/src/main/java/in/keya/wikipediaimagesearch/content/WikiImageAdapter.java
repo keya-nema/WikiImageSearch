@@ -12,6 +12,7 @@ import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,31 +66,32 @@ public class WikiImageAdapter extends BaseAdapter {
 
     public class ViewHolder{
         ImageView imageHolder;
-        //TextView textHolder;
+        ProgressBar progressBar;
     }
 
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
 
         ImageView picture;
-        //TextView name;
+        ProgressBar progressBar;
         ViewHolder viewHolder = new ViewHolder();
         if (view == null) {
             view = inflater.inflate(R.layout.grid_item, viewGroup, false);
             viewHolder.imageHolder= (ImageView) view.findViewById(R.id.picture);
-            //viewHolder.textHolder = (TextView) view.findViewById(R.id.text);
+            viewHolder.progressBar = (ProgressBar) view.findViewById(R.id.image_fetching_progress);
             view.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) view.getTag();
         }
 
         picture = viewHolder.imageHolder;
-//        name = viewHolder.textHolder;
+        progressBar = viewHolder.progressBar;
 
         WikiImage image = (WikiImage) getItem(i);
         Bitmap bitmap = image.getBitmap();
         if (bitmap == null) {
-            ImageFetcher imageFetcher = new ImageFetcher(imageResultCallback(picture, image), context);
+            progressBar.setVisibility(View.VISIBLE);
+            ImageFetcher imageFetcher = new ImageFetcher(imageResultCallback(viewHolder, image), context);
             imageFetcher.execute(image.getThumbnailURL());
             if (!asyncLists.contains(imageFetcher)) asyncLists.add(imageFetcher);
             Log.d(context.getPackageName(), "getView got called for :" + i + "imageFetcher:" + imageFetcher);
@@ -102,10 +104,12 @@ public class WikiImageAdapter extends BaseAdapter {
         return view;
     }
 
-    private ResultCallback<Bitmap> imageResultCallback(final ImageView imageView, final WikiImage image) {
+    private ResultCallback<Bitmap> imageResultCallback(final ViewHolder holder, final WikiImage image) {
         return new ResultCallback<Bitmap>() {
             @Override
             public void onResult(Bitmap result) {
+                final ImageView imageView = holder.imageHolder;
+                holder.progressBar.setVisibility(View.GONE);
                 imageView.setImageBitmap(result);
                 image.setBitmap(result);
                 imageView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
@@ -119,7 +123,6 @@ public class WikiImageAdapter extends BaseAdapter {
                             } else {
                                 imageView.setVisibility(View.VISIBLE);
                             }
-
                         }
                     }
                 });

@@ -34,12 +34,17 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
     private EditText homeSearchView;
     private WikiImageAdapter adapter;
     private Toolbar toolbar;
+    private View progressBar;
+    private GridView gridView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         homeSearchView = (EditText) findViewById(R.id.home_search);
+        progressBar = findViewById(R.id.content_fetching_progress);
+        gridView = (GridView) findViewById(R.id.gridview);
+
         attachTextWatcher();
         attachClearText();
         toolbar = (Toolbar) findViewById(R.id.my_toolbar);
@@ -52,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
             @Override
             public void onClick(View v) {
                 homeSearchView.setText("");
+                progressBar.setVisibility(View.GONE);
                 clearAdapter();
             }
         });
@@ -61,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
         if (adapter != null) {
             adapter.setImages(null);
             adapter.notifyDataSetChanged();
+            gridView.setVisibility(View.GONE);
         }
     }
 
@@ -84,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
             @Override
             public void afterTextChanged(final Editable s) {
                 clearAdapter();
-
+                progressBar.setVisibility(View.VISIBLE);
                 timer.cancel();
                 timer = new Timer();
                 timer.schedule(
@@ -101,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
 
                                     task = new ContentFetcher(MainActivity.this, MainActivity.this);
                                     Log.d(getPackageName(), "Inside textchanged, calling task.execute()...");
-                                    task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,ContentFetcher.URL + s);
+                                    task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ContentFetcher.URL + s);
                                 }
                             }
                         }, DELAY);
