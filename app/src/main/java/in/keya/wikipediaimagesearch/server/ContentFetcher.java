@@ -48,8 +48,10 @@ public class ContentFetcher extends AsyncTask<String, Void, String> {
                 StringBuilder result = new StringBuilder();
                 String line;
                 try {
-                    while ((line = in.readLine()) != null) {
-                        result.append(line);
+                    if (!isCancelled()) {
+                        while ((line = in.readLine()) != null) {
+                            result.append(line);
+                        }
                     }
                 } catch (IOException readerException) {
                     readerException.printStackTrace();
@@ -64,7 +66,8 @@ public class ContentFetcher extends AsyncTask<String, Void, String> {
             Log.d(context.getPackageName(), "Interrupted");
             iioe.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            Log.d(context.getPackageName(), "Error fetching content: " + e.getMessage());
         }
         return null;
     }

@@ -91,15 +91,15 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
             @Override
             public void afterTextChanged(final Editable s) {
                 clearAdapter();
-                progressBar.setVisibility(View.VISIBLE);
-                timer.cancel();
-                timer = new Timer();
-                timer.schedule(
-                        new TimerTask() {
-                            @Override
-                            public void run() {
-                                if (s != null && s.length() > 0) {
 
+                if (s != null && s.length() > 0) {
+                    progressBar.setVisibility(View.VISIBLE);
+                    timer.cancel();
+                    timer = new Timer();
+                    timer.schedule(
+                            new TimerTask() {
+                                @Override
+                                public void run() {
                                     synchronized (this) {
                                         if (task != null) {
                                             task.cancel(true);
@@ -109,17 +109,22 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
                                     task = new ContentFetcher(MainActivity.this, MainActivity.this);
                                     Log.d(getPackageName(), "Inside textchanged, calling task.execute()...");
                                     task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ContentFetcher.URL + s);
+
                                 }
-                            }
-                        }, DELAY);
+                            }, DELAY);
+                } else {
+                    progressBar.setVisibility(View.GONE);
+                }
+
             }
         });
     }
 
     @Override
     public void onResult(final ArrayList<WikiImage> wikiImages) {
+        progressBar.setVisibility(View.GONE);
+        gridView.setVisibility(View.VISIBLE);
         adapter = new WikiImageAdapter(this, wikiImages);
-        GridView gridView = (GridView) findViewById(R.id.gridview);
         gridView.setAdapter(adapter);
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override

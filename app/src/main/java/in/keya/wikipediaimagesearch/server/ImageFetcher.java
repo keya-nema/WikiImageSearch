@@ -52,7 +52,8 @@ public class ImageFetcher extends AsyncTask<String, Void, Bitmap> {
       }
 
     } catch (Exception e) {
-      e.printStackTrace();
+      //e.printStackTrace();
+      Log.d(context.getPackageName(), "Error downloading image: " + e.getMessage());
     }
     return imageBitmap;
   }
