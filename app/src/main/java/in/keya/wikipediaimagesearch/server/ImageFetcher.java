@@ -4,11 +4,16 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
 
 import in.keya.wikipediaimagesearch.R;
+
+/**
+ * Created by keya on 14/04/16.
+ */
 
 public class ImageFetcher extends AsyncTask<String, Void, Bitmap> {
   private ResultCallback<Bitmap> bitmapCallback;
@@ -23,7 +28,9 @@ public class ImageFetcher extends AsyncTask<String, Void, Bitmap> {
   protected Bitmap doInBackground(String... urls) {
     String imageUrl = urls[0];
     if (imageUrl == null) return BitmapFactory.decodeResource(context.getResources(), R.drawable.placeholder);
+    Log.d(context.getPackageName(), "Downloading file: "+ imageUrl);
     Bitmap imageBitmap = downloadImage(imageUrl);
+    if (isCancelled()) return null;
     return imageBitmap;
   }
 

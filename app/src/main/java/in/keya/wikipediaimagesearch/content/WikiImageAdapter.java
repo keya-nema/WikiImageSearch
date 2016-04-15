@@ -5,6 +5,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Build;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewAnimationUtils;
@@ -25,9 +26,9 @@ import in.keya.wikipediaimagesearch.server.ResultCallback;
 
 public class WikiImageAdapter extends BaseAdapter {
     private final Context context;
-    private List<WikiImage> wikiImages = new ArrayList<WikiImage>();
+    private List<WikiImage> wikiImages = new ArrayList<>();
     private LayoutInflater inflater;
-
+    private ArrayList<ImageFetcher> asyncLists = new ArrayList<>();
     public WikiImageAdapter(Context context, ArrayList<WikiImage> images) {
         inflater = LayoutInflater.from(context);
         this.context = context;
@@ -53,6 +54,13 @@ public class WikiImageAdapter extends BaseAdapter {
 
     public void setImages(ArrayList<WikiImage> images) {
         this.wikiImages = images;
+
+        // If images are set as null, cancel all running async tasks
+        if (images == null && !asyncLists.isEmpty()) {
+            for (int i = 0; i < asyncLists.size(); i++) {
+                asyncLists.get(i).cancel(true);
+            }
+        }
     }
 
     public class ViewHolder{
@@ -62,6 +70,7 @@ public class WikiImageAdapter extends BaseAdapter {
 
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
+
         ImageView picture;
         //TextView name;
         ViewHolder viewHolder = new ViewHolder();
@@ -78,10 +87,17 @@ public class WikiImageAdapter extends BaseAdapter {
 //        name = viewHolder.textHolder;
 
         WikiImage image = (WikiImage) getItem(i);
-
-        ImageFetcher imageFetcher = new ImageFetcher(imageResultCallback(picture, image), context);
-        imageFetcher.execute(image.getThumbnailURL());
-//        name.setText(image.getTitle());
+        Bitmap bitmap = image.getBitmap();
+        if (bitmap == null) {
+            ImageFetcher imageFetcher = new ImageFetcher(imageResultCallback(picture, image), context);
+            imageFetcher.execute(image.getThumbnailURL());
+            if (!asyncLists.contains(imageFetcher)) asyncLists.add(imageFetcher);
+            Log.d(context.getPackageName(), "getView got called for :" + i + "imageFetcher:" + imageFetcher);
+        } else {
+            picture.setImageBitmap(bitmap);
+            picture.setVisibility(View.VISIBLE);
+        }
+        //name.setText(image.getTitle());
 
         return view;
     }

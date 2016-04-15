@@ -2,6 +2,7 @@ package in.keya.wikipediaimagesearch.activities;
 
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -16,6 +17,8 @@ import android.widget.GridView;
 import android.widget.ImageButton;
 
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import in.keya.wikipediaimagesearch.R;
 import in.keya.wikipediaimagesearch.content.ContentParser;
@@ -68,18 +71,40 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (task != null) {
-                    task.cancel(true);
+                synchronized (this) {
+                    if (task != null) {
+                        task.cancel(true);
+                    }
                 }
             }
 
+            private Timer timer = new Timer();
+            private final long DELAY = 500; // milliseconds
+
             @Override
-            public void afterTextChanged(Editable s) {
-                if (s != null && s.length() > 0) {
-                    clearAdapter();
-                    task = new ContentFetcher(MainActivity.this, MainActivity.this);
-                    task.execute(ContentFetcher.URL + s);
-                }
+            public void afterTextChanged(final Editable s) {
+                clearAdapter();
+
+                timer.cancel();
+                timer = new Timer();
+                timer.schedule(
+                        new TimerTask() {
+                            @Override
+                            public void run() {
+                                if (s != null && s.length() > 0) {
+
+                                    synchronized (this) {
+                                        if (task != null) {
+                                            task.cancel(true);
+                                        }
+                                    }
+
+                                    task = new ContentFetcher(MainActivity.this, MainActivity.this);
+                                    Log.d(getPackageName(), "Inside textchanged, calling task.execute()...");
+                                    task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,ContentFetcher.URL + s);
+                                }
+                            }
+                        }, DELAY);
             }
         });
     }
