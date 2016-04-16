@@ -13,7 +13,6 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
@@ -27,6 +26,7 @@ import in.keya.wikipediaimagesearch.content.ContentParser;
 import in.keya.wikipediaimagesearch.content.IResultReceiver;
 import in.keya.wikipediaimagesearch.content.WikiImage;
 import in.keya.wikipediaimagesearch.content.WikiImageAdapter;
+import in.keya.wikipediaimagesearch.fragments.GridFragment;
 import in.keya.wikipediaimagesearch.server.Constants;
 import in.keya.wikipediaimagesearch.server.ContentFetcher;
 import in.keya.wikipediaimagesearch.server.ResultCallback;
@@ -46,8 +46,6 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
         setContentView(R.layout.activity_main);
         homeSearchView = (EditText) findViewById(R.id.home_search);
         progressBar = findViewById(R.id.content_fetching_progress);
-        gridView = (GridView) findViewById(R.id.gridview);
-
         attachTextWatcher();
         attachClearText();
         toolbar = (Toolbar) findViewById(R.id.my_toolbar);
@@ -61,23 +59,23 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
             public void onClick(View v) {
                 homeSearchView.setText("");
                 progressBar.setVisibility(View.GONE);
-                clearAdapter();
+                clearFragmentGridAdapter();
             }
         });
     }
 
-    private void clearAdapter() {
-        if (adapter != null) {
-            adapter.setImages(null);
-            adapter.notifyDataSetChanged();
-            gridView.setVisibility(View.GONE);
+    private void clearFragmentGridAdapter() {
+        Fragment fragment = getFragmentManager().findFragmentById(R.id.container_frame_layout);
+        if (fragment instanceof GridFragment) {
+            ((GridFragment) fragment).clearAdapter();
         }
     }
 
     private void attachTextWatcher() {
         homeSearchView.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -93,8 +91,7 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
 
             @Override
             public void afterTextChanged(final Editable s) {
-                clearAdapter();
-
+                clearFragmentGridAdapter();
                 if (s != null && s.length() > 0) {
                     progressBar.setVisibility(View.VISIBLE);
                     timer.cancel();
@@ -111,8 +108,7 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
 
                                     task = new ContentFetcher(MainActivity.this, MainActivity.this);
                                     Log.d(getPackageName(), "Inside textchanged, calling task.execute()...");
-                                    task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, ContentFetcher.URL + s);
-
+                                    task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, Constants.URL + s);
                                 }
                             }, DELAY);
                 } else {
@@ -125,27 +121,20 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
 
     @Override
     public void onResult(final ArrayList<WikiImage> wikiImages) {
+        // Add the grid fragment here
+        Log.d(getPackageName(), "Adding grid fragment");
         progressBar.setVisibility(View.GONE);
-        gridView.setVisibility(View.VISIBLE);
-        adapter = new WikiImageAdapter(this, wikiImages);
-        gridView.setAdapter(adapter);
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                FragmentManager fragmentManager = getFragmentManager();
-                if (fragmentManager.findFragmentById(R.id.container_frame_layout) == null) {
-                    WikiImage wikiImage = wikiImages.get(position);
-                    ImageDetailsFragment fragment = new ImageDetailsFragment();
-                    fragment.setWikiImage(wikiImage);
-                    fragmentManager.beginTransaction().add(R.id.container_frame_layout, fragment).commit();
-                    if (toolbar != null) {
-                        toolbar.setVisibility(View.GONE);
-                    }
-                    getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
-                }
+        FragmentManager fragmentManager = getFragmentManager();
+        if (fragmentManager.findFragmentById(R.id.container_frame_layout) == null) {
+            GridFragment fragment = new GridFragment();
+            fragment.setWikiImages(wikiImages);
+            fragmentManager.beginTransaction().add(R.id.container_frame_layout, fragment).commit();
+        } else {
+            Fragment fragment = fragmentManager.findFragmentById(R.id.container_frame_layout);
+            if (fragment instanceof GridFragment) {
+                ((GridFragment) fragment).setWikiImages(wikiImages, true);
             }
-        });
+        }
     }
 
     @Override
@@ -154,7 +143,7 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
             Log.d(getPackageName(), "Result fetched: " + result);
             ContentParser parser = new ContentParser((String) result, this);
             parser.parseResult();
-        } else if (result == null){
+        } else if (result == null) {
             // Show an error dialog
             String message = "";
             if (code == Constants.NETWORK_ERROR_CODE) {
@@ -163,7 +152,7 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
                 message = getString(R.string.error_message);
             }
             showErrorDialog(message, code);
-            clearAdapter();
+            clearFragmentGridAdapter();
             progressBar.setVisibility(View.GONE);
         }
     }
@@ -184,18 +173,25 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
         alert.show();
     }
 
+    FragmentManager fragmentManager = getFragmentManager();
+
     @Override
     public void onBackPressed() {
-        FragmentManager fragmentManager = getFragmentManager();
-        Fragment fragment = fragmentManager.findFragmentById(R.id.container_frame_layout);
+        Fragment fragment = fragmentManager.findFragmentById(R.id.details_frame_layout);
         if (fragment == null) {
             super.onBackPressed();
         } else {
             fragmentManager.beginTransaction().remove(fragment).commit();
-            if (toolbar != null) {
-                toolbar.setVisibility(View.VISIBLE);
-            }
+            toggleToolbar(true);
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
+    }
+
+    public void toggleToolbar(boolean visible) {
+        if (toolbar != null && visible) {
+            toolbar.setVisibility(View.VISIBLE);
+        } else {
+            toolbar.setVisibility(View.GONE);
         }
     }
 }

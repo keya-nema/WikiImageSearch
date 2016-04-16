@@ -4,15 +4,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_gravity="center"
-    android:background="@android:color/black"
-    android:transitionName="wikiimage">
+    android:background="@android:color/black">
     <in.keya.wikipediaimagesearch.ui.SquareImageView
         android:id="@+id/picture"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:adjustViewBounds="true"
         android:layout_centerInParent="true"
-        android:visibility="invisible" />
+        android:visibility="invisible"
+        android:transitionName="wikiimage"/>
     <ProgressBar
         android:id="@+id/image_fetching_progress"
         style="?android:attr/progressBarStyleSmall"

@@ -48,9 +48,10 @@ public class ImageFetcher extends AsyncTask<String, Void, Bitmap> {
         connection.connect();
 
         // read the output from the server
-        imageBitmap = BitmapFactory.decodeStream(connection.getInputStream());
+        if (!isCancelled())
+          imageBitmap = BitmapFactory.decodeStream(connection.getInputStream());
 
-        if (connection != null) {
+        if (connection != null && !isCancelled()) {
           code = connection.getResponseCode();
         } else {
           code = Constants.NETWORK_ERROR_CODE;

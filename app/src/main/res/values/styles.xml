@@ -7,12 +7,14 @@
         <item name="android:editTextColor">@android:color/black</item>
     </style>-->
 
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme.Base" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primary_dark</item>
     </style>
+
+    <style name="AppTheme" parent="AppTheme.Base"></style>
 
     <style name="editTextTheme" parent="Base.V7.Widget.AppCompat.EditText">
         <item name="android:editTextColor">@android:color/black</item>

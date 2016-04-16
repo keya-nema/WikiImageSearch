@@ -5,20 +5,25 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Build;
+import android.support.v4.view.ViewCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import in.keya.wikipediaimagesearch.R;
+import in.keya.wikipediaimagesearch.fragments.GridFragment;
 import in.keya.wikipediaimagesearch.server.Constants;
 import in.keya.wikipediaimagesearch.server.ImageFetcher;
 import in.keya.wikipediaimagesearch.server.ResultCallback;
@@ -29,13 +34,15 @@ import in.keya.wikipediaimagesearch.server.ResultCallback;
 
 public class WikiImageAdapter extends BaseAdapter {
     private final Context context;
+    private final View.OnClickListener gridListener;
     private List<WikiImage> wikiImages = new ArrayList<>();
     private LayoutInflater inflater;
-    private ArrayList<ImageFetcher> asyncLists = new ArrayList<>();
-    public WikiImageAdapter(Context context, ArrayList<WikiImage> images) {
+    private HashMap<String, ImageFetcher> asyncMap = new HashMap<>();
+    public WikiImageAdapter(Context context, ArrayList<WikiImage> images, View.OnClickListener listener) {
         inflater = LayoutInflater.from(context);
         this.context = context;
         this.wikiImages = images;
+        this.gridListener = listener;
     }
 
     @Override
@@ -57,18 +64,22 @@ public class WikiImageAdapter extends BaseAdapter {
 
     public void setImages(ArrayList<WikiImage> images) {
         this.wikiImages = images;
-
         // If images are set as null, cancel all running async tasks
-        if (images == null && !asyncLists.isEmpty()) {
-            for (int i = 0; i < asyncLists.size(); i++) {
-                asyncLists.get(i).cancel(true);
+        if (wikiImages == null && !asyncMap.isEmpty()) {
+            Iterator<String> iterator = asyncMap.keySet().iterator();
+            while (iterator.hasNext()) {
+                String key = iterator.next();
+                asyncMap.get(key).cancel(true);
+                iterator.remove();
             }
+            asyncMap.clear();
         }
     }
 
     public class ViewHolder{
         ImageView imageHolder;
         ProgressBar progressBar;
+        public int position;
     }
 
     @Override
@@ -87,20 +98,30 @@ public class WikiImageAdapter extends BaseAdapter {
         }
 
         picture = viewHolder.imageHolder;
+        picture.setImageBitmap(null);
+        picture.setVisibility(View.INVISIBLE);
         progressBar = viewHolder.progressBar;
+        viewHolder.position = i;
 
         WikiImage image = (WikiImage) getItem(i);
         Bitmap bitmap = image.getBitmap();
         if (bitmap == null) {
             progressBar.setVisibility(View.VISIBLE);
-            ImageFetcher imageFetcher = new ImageFetcher(imageResultCallback(viewHolder, image), context);
-            imageFetcher.execute(image.getThumbnailURL());
-            if (!asyncLists.contains(imageFetcher)) asyncLists.add(imageFetcher);
-            Log.d(context.getPackageName(), "getView got called for :" + i + "imageFetcher:" + imageFetcher);
+            boolean isAdded = asyncMap.containsKey(image.getKey());
+            if (!isAdded) { // No download of image happening, start now
+                ImageFetcher imageFetcher = new ImageFetcher(imageResultCallback(viewHolder, image), context);
+                imageFetcher.execute(image.getThumbnailURL());
+                asyncMap.put(image.getKey(), imageFetcher);
+            }
         } else {
             picture.setImageBitmap(bitmap);
             picture.setVisibility(View.VISIBLE);
+            progressBar.setVisibility(View.GONE);
         }
+
+        ViewCompat.setTransitionName(picture, image.getKey());
+        picture.setTag(image);
+        picture.setOnClickListener(gridListener);
         //name.setText(image.getTitle());
 
         return view;
@@ -112,17 +133,19 @@ public class WikiImageAdapter extends BaseAdapter {
             public void onResult(Bitmap result, int code) {
                 final ImageView imageView = holder.imageHolder;
                 holder.progressBar.setVisibility(View.GONE);
+                if (asyncMap != null && asyncMap.get(image.getKey()) != null) {
+                    asyncMap.remove(image.getKey());
+                }
                 imageView.setImageBitmap(result);
                 image.setBitmap(result);
                 if (code == Constants.NETWORK_ERROR_CODE) {
                     Toast.makeText(context, context.getString(R.string.error_message), Toast.LENGTH_SHORT).show();
                 }
-                imageView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
-                    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+
+                imageView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                     @Override
-                    public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                    public void onGlobalLayout() {
                         if (imageView.getVisibility() == View.INVISIBLE) {
-                            v.removeOnLayoutChangeListener(this);
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                                 toggleInformationView(imageView);
                             } else {
