@@ -30,7 +30,7 @@ public class ImageDetailsFragment extends Fragment {
         View fragmentView = inflater.inflate(R.layout.fragment_image_view, container, false);
         if (wikiImage != null) {
             Bitmap bitmap = wikiImage.getBitmap();
-            ImageView imageView = (ImageView) fragmentView.findViewById(R.id.fragment_image_container).findViewById(R.id.picture);
+            ImageView imageView = (ImageView) fragmentView.findViewById(R.id.picture);
             imageView.setImageBitmap(bitmap);
             imageView.setVisibility(View.VISIBLE);
 
