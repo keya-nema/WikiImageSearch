@@ -6,12 +6,10 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.support.v4.view.ViewCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -23,7 +21,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import in.keya.wikipediaimagesearch.R;
-import in.keya.wikipediaimagesearch.fragments.GridFragment;
 import in.keya.wikipediaimagesearch.server.Constants;
 import in.keya.wikipediaimagesearch.server.ImageFetcher;
 import in.keya.wikipediaimagesearch.server.ResultCallback;
@@ -99,7 +96,6 @@ public class WikiImageAdapter extends BaseAdapter {
 
         picture = viewHolder.imageHolder;
         picture.setImageBitmap(null);
-        picture.setVisibility(View.INVISIBLE);
         progressBar = viewHolder.progressBar;
         viewHolder.position = i;
 
@@ -107,24 +103,38 @@ public class WikiImageAdapter extends BaseAdapter {
         Bitmap bitmap = image.getBitmap();
         if (bitmap == null) {
             progressBar.setVisibility(View.VISIBLE);
-            boolean isAdded = asyncMap.containsKey(image.getKey());
-            if (!isAdded) { // No download of image happening, start now
-                ImageFetcher imageFetcher = new ImageFetcher(imageResultCallback(viewHolder, image), context);
-                imageFetcher.execute(image.getThumbnailURL());
-                asyncMap.put(image.getKey(), imageFetcher);
+            String url = image.getThumbnailURL();
+            if (url == null) {
+                // Use placeholder
+                picture.setImageResource(R.drawable.placeholder);
+                revealImage(picture, progressBar, true);
+            } else {
+                boolean isAdded = asyncMap.containsKey(image.getKey());
+                if (!isAdded) { // No download of image happening, start now
+                    ImageFetcher imageFetcher = new ImageFetcher(imageResultCallback(viewHolder, image), context);
+                    imageFetcher.execute(new String[]{url});
+                    asyncMap.put(image.getKey(), imageFetcher);
+                }
             }
         } else {
             picture.setImageBitmap(bitmap);
-            picture.setVisibility(View.VISIBLE);
-            progressBar.setVisibility(View.GONE);
+            revealImage(picture, progressBar, false);
         }
 
         ViewCompat.setTransitionName(picture, image.getKey());
         picture.setTag(image);
         picture.setOnClickListener(gridListener);
-        //name.setText(image.getTitle());
 
         return view;
+    }
+
+    private void revealImage(ImageView picture, ProgressBar progressBar, boolean isAnimation) {
+        progressBar.setVisibility(View.GONE);
+        if (isAnimation && picture.getVisibility() == View.INVISIBLE)
+            revealImageWithAnimation(picture);
+        else if (picture.getVisibility() == View.INVISIBLE) {
+            picture.setVisibility(View.VISIBLE);
+        }
     }
 
     private ResultCallback<Bitmap> imageResultCallback(final ViewHolder holder, final WikiImage image) {
@@ -142,20 +152,25 @@ public class WikiImageAdapter extends BaseAdapter {
                     Toast.makeText(context, context.getString(R.string.error_message), Toast.LENGTH_SHORT).show();
                 }
 
-                imageView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                    @Override
-                    public void onGlobalLayout() {
-                        if (imageView.getVisibility() == View.INVISIBLE) {
-                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                                toggleInformationView(imageView);
-                            } else {
-                                imageView.setVisibility(View.VISIBLE);
-                            }
-                        }
-                    }
-                });
+                revealImageWithAnimation(imageView);
             }
         };
+    }
+
+    private void revealImageWithAnimation(final ImageView imageView) {
+        imageView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+            @Override
+            public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                imageView.removeOnLayoutChangeListener(this);
+                if (imageView.getVisibility() == View.INVISIBLE) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        toggleInformationView(imageView);
+                    } else {
+                        imageView.setVisibility(View.VISIBLE);
+                    }
+                }
+            }
+        });
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
