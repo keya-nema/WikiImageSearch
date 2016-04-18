@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v4.view.ViewCompat;
 import android.view.LayoutInflater;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import in.keya.wikipediaimagesearch.R;
 import in.keya.wikipediaimagesearch.server.Constants;
@@ -112,7 +114,7 @@ public class WikiImageAdapter extends BaseAdapter {
                 boolean isAdded = asyncMap.containsKey(image.getKey());
                 if (!isAdded) { // No download of image happening, start now
                     ImageFetcher imageFetcher = new ImageFetcher(imageResultCallback(viewHolder, image), context);
-                    imageFetcher.execute(new String[]{url});
+                    imageFetcher.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,  new String[]{url});
                     asyncMap.put(image.getKey(), imageFetcher);
                 }
             }
