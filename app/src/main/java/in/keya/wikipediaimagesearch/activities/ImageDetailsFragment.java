@@ -31,11 +31,16 @@ public class ImageDetailsFragment extends Fragment {
         if (wikiImage != null) {
             Bitmap bitmap = wikiImage.getBitmap();
             ImageView imageView = (ImageView) fragmentView.findViewById(R.id.picture);
-            imageView.setImageBitmap(bitmap);
-            imageView.setVisibility(View.VISIBLE);
+            if (bitmap == null) {
+                // Show placeholder image
+                imageView.setImageResource(R.drawable.placeholder);
+            } else {
+                imageView.setImageBitmap(bitmap);
+                imageView.setVisibility(View.VISIBLE);
 
-            TextView textView = (TextView) fragmentView.findViewById(R.id.text);
-            textView.setText(wikiImage.getTitle());
+                TextView textView = (TextView) fragmentView.findViewById(R.id.text);
+                textView.setText(wikiImage.getTitle());
+            }
         }
         return fragmentView;
     }
