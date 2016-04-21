@@ -12,6 +12,7 @@ public class WikiImage {
     String key;
     private String title;
     private Bitmap bitmap;
+    private boolean isDrawn;
 
     public void setThumbnailURL(String url) { this.thumbnailURL = url; }
 
@@ -38,4 +39,13 @@ public class WikiImage {
     }
 
     public Bitmap getBitmap() { return bitmap; }
+
+    // This is to avoid re-animating the images
+    public void setIsDrawn(boolean isDrawn) {
+        this.isDrawn = isDrawn;
+    }
+
+    public boolean isDrawn() {
+        return isDrawn;
+    }
 }

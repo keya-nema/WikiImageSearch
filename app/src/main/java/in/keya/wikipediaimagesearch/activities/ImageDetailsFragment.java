@@ -15,12 +15,13 @@ import android.widget.TextView;
 import in.keya.wikipediaimagesearch.R;
 import in.keya.wikipediaimagesearch.content.WikiImage;
 
+import static android.support.v4.view.ViewCompat.setTransitionName;
+
 /**
  * Created by keya on 14/04/16.
  */
 public class ImageDetailsFragment extends Fragment {
 
-    private WikiImage image;
     private WikiImage wikiImage;
 
     @Nullable
@@ -29,18 +30,20 @@ public class ImageDetailsFragment extends Fragment {
         super.onCreateView(inflater, container, savedInstanceState);
         View fragmentView = inflater.inflate(R.layout.fragment_image_view, container, false);
         if (wikiImage != null) {
+            ImageView imageView = (ImageView) fragmentView.findViewById(R.id.detail_picture);
+            setTransitionName(imageView, wikiImage.getKey());
             Bitmap bitmap = wikiImage.getBitmap();
-            ImageView imageView = (ImageView) fragmentView.findViewById(R.id.picture);
             if (bitmap == null) {
                 // Show placeholder image
                 imageView.setImageResource(R.drawable.placeholder);
             } else {
                 imageView.setImageBitmap(bitmap);
-                imageView.setVisibility(View.VISIBLE);
-
-                TextView textView = (TextView) fragmentView.findViewById(R.id.text);
-                textView.setText(wikiImage.getTitle());
             }
+            imageView.setVisibility(View.VISIBLE);
+
+            TextView textView = (TextView) fragmentView.findViewById(R.id.text);
+            textView.setText(wikiImage.getTitle());
+
         }
         return fragmentView;
     }

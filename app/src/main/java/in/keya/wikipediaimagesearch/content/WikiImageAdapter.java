@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.Executor;
 
 import in.keya.wikipediaimagesearch.R;
 import in.keya.wikipediaimagesearch.server.Constants;
@@ -103,15 +102,20 @@ public class WikiImageAdapter extends BaseAdapter {
 
         WikiImage image = (WikiImage) getItem(i);
         Bitmap bitmap = image.getBitmap();
+        String key = image.getKey();
         if (bitmap == null) {
             progressBar.setVisibility(View.VISIBLE);
             String url = image.getThumbnailURL();
             if (url == null) {
                 // Use placeholder
                 picture.setImageResource(R.drawable.placeholder);
-                revealImage(picture, progressBar, true);
+                if (image.isDrawn()) {
+                    revealImage(picture, progressBar, false);
+                } else {
+                    revealImage(picture, progressBar, true);
+                }
             } else {
-                boolean isAdded = asyncMap.containsKey(image.getKey());
+                boolean isAdded = asyncMap.containsKey(key);
                 if (!isAdded) { // No download of image happening, start now
                     ImageFetcher imageFetcher = new ImageFetcher(imageResultCallback(viewHolder, image), context);
                     imageFetcher.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,  new String[]{url});
@@ -122,8 +126,8 @@ public class WikiImageAdapter extends BaseAdapter {
             picture.setImageBitmap(bitmap);
             revealImage(picture, progressBar, false);
         }
-
-        ViewCompat.setTransitionName(picture, image.getKey());
+        image.setIsDrawn(true);
+        ViewCompat.setTransitionName(picture, key);
         picture.setTag(image);
         picture.setOnClickListener(gridListener);
 
@@ -160,6 +164,7 @@ public class WikiImageAdapter extends BaseAdapter {
     }
 
     private void revealImageWithAnimation(final ImageView imageView) {
+
         imageView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
             @Override
             public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {

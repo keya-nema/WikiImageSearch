@@ -177,11 +177,11 @@ public class MainActivity extends AppCompatActivity implements ResultCallback, I
 
     @Override
     public void onBackPressed() {
-        Fragment fragment = fragmentManager.findFragmentById(R.id.details_frame_layout);
-        if (fragment == null) {
+        Fragment fragment = fragmentManager.findFragmentById(R.id.container_frame_layout);
+        if (fragment == null || !(fragment instanceof  ImageDetailsFragment)) {
             super.onBackPressed();
         } else {
-            fragmentManager.beginTransaction().remove(fragment).commit();
+            fragmentManager.popBackStack(Constants.BACK_STACK_NAME, FragmentManager.POP_BACK_STACK_INCLUSIVE);
             toggleToolbar(true);
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         }

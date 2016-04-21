@@ -11,8 +11,7 @@
         android:layout_height="match_parent"
         android:adjustViewBounds="true"
         android:layout_centerInParent="true"
-        android:visibility="invisible"
-        android:transitionName="wikiimage"/>
+        android:visibility="invisible" />
     <ProgressBar
         android:id="@+id/image_fetching_progress"
         style="?android:attr/progressBarStyleSmall"
